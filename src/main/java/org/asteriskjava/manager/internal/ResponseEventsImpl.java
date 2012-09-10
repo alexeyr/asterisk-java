@@ -22,7 +22,8 @@ import java.util.Collection;
 import org.asteriskjava.manager.ResponseEvents;
 import org.asteriskjava.manager.event.ResponseEvent;
 import org.asteriskjava.manager.response.ManagerResponse;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Implementation of the ResponseEvents interface.
@@ -33,20 +34,10 @@ import org.asteriskjava.manager.response.ManagerResponse;
  */
 public class ResponseEventsImpl implements ResponseEvents
 {
+    private final Logger logger = LoggerFactory.getLogger(getClass());
     private ManagerResponse response;
-    private final Collection<ResponseEvent> events;
+    private final Collection<ResponseEvent> events = new ArrayList<ResponseEvent>();
     private boolean complete;
-
-    /**
-     * Creates a new instance.
-     */
-    public ResponseEventsImpl()
-    {
-        this.events = new ArrayList<ResponseEvent>();
-        this.complete = false;
-    }
-
-    // implementation of the ResponseEvents interface
 
     public ManagerResponse getResponse()
     {
@@ -55,7 +46,11 @@ public class ResponseEventsImpl implements ResponseEvents
 
     public Collection<ResponseEvent> getEvents()
     {
-        return events;
+        synchronized (events)
+        {
+            logger.trace("Retuning a list of events, size: {}", events.size());
+            return new ArrayList<ResponseEvent>(events);
+        }
     }
 
     public boolean isComplete()
@@ -72,6 +67,7 @@ public class ResponseEventsImpl implements ResponseEvents
      */
     public void setRepsonse(ManagerResponse response)
     {
+        logger.trace("Response set: {}, previous: {}", response, this.response);
         this.response = response;
     }
 
@@ -86,6 +82,10 @@ public class ResponseEventsImpl implements ResponseEvents
         {
             events.add(event);
         }
+        if (logger.isTraceEnabled())
+        {
+            logger.trace("Added event {} complete={}", event, isComplete());
+        }
     }
 
     /**
@@ -96,6 +96,7 @@ public class ResponseEventsImpl implements ResponseEvents
      */
     public void setComplete(boolean complete)
     {
+        logger.trace("Complete set to {}, previously: {}", complete, this.complete);
         this.complete = complete;
     }
 }
