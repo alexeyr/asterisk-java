@@ -292,19 +292,28 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
         initializeIfNeeded();
 
         // 2000 ms extra for the OriginateFailureEvent should be fine
-        responseEvents = sendEventGeneratingAction(originateAction, originateAction.getTimeout() + 2000);
+        final long timeout = originateAction.getTimeout() + 2000;
+        final long deadline = System.currentTimeMillis() + timeout;
+        responseEvents = sendEventGeneratingAction(originateAction, timeout);
 
         responseEventIterator = responseEvents.getEvents().iterator();
         if (responseEventIterator.hasNext())
         {
-            ResponseEvent responseEvent;
+            ResponseEvent responseEvent = responseEventIterator.next();
 
-            responseEvent = responseEventIterator.next();
             if (responseEvent instanceof OriginateResponseEvent)
             {
                 uniqueId = ((OriginateResponseEvent) responseEvent).getUniqueId();
                 logger.debug(responseEvent.getClass().getName() + " received with uniqueId " + uniqueId);
-                channel = getChannelById(uniqueId);
+                try
+                {
+                    channel = awaitChannelById(uniqueId, Math.max(10, deadline - System.currentTimeMillis()));
+                }
+                catch (InterruptedException e)
+                {
+                    Thread.currentThread().interrupt();
+                    channel = getChannelById(uniqueId);
+                }
             }
         }
 
@@ -429,6 +438,12 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
     {
         initializeIfNeeded();
         return channelManager.getChannelImplById(id);
+    }
+    
+    AsteriskChannel awaitChannelById(String id, long timeout) throws ManagerCommunicationException, InterruptedException
+    {
+        initializeIfNeeded();
+        return channelManager.awaitChannelImplById(id, timeout);
     }
 
     public Collection<MeetMeRoom> getMeetMeRooms() throws ManagerCommunicationException
