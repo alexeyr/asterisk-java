@@ -32,6 +32,8 @@ public class HangupEvent extends AbstractChannelEvent
 
     private Integer cause;
     private String causeTxt;
+    private String connectedLineName;
+    private String connectedLineNum;
 
     public HangupEvent(Object source)
     {
@@ -80,4 +82,20 @@ public class HangupEvent extends AbstractChannelEvent
     {
         this.causeTxt = causeTxt;
     }
+    
+    public String getConnectedLineName() {
+		return connectedLineName;
+	}
+    
+    public void setConnectedLineName(String connectedLineName) {
+		this.connectedLineName = connectedLineName;
+	}
+    
+    public String getConnectedLineNum() {
+		return connectedLineNum;
+	}
+    
+    public void setConnectedLineNum(String connectedLineNum) {
+		this.connectedLineNum = connectedLineNum;
+	}
 }
