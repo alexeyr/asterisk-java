@@ -16,15 +16,44 @@
  */
 package org.asteriskjava.live.internal;
 
-import org.asteriskjava.live.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import org.asteriskjava.live.AsteriskChannel;
+import org.asteriskjava.live.CallerId;
+import org.asteriskjava.live.ChannelState;
+import org.asteriskjava.live.Extension;
+import org.asteriskjava.live.HangupCause;
+import org.asteriskjava.live.ManagerCommunicationException;
 import org.asteriskjava.manager.ResponseEvents;
 import org.asteriskjava.manager.action.StatusAction;
-import org.asteriskjava.manager.event.*;
+import org.asteriskjava.manager.event.BridgeEvent;
+import org.asteriskjava.manager.event.CdrEvent;
+import org.asteriskjava.manager.event.DialEvent;
+import org.asteriskjava.manager.event.DtmfEvent;
+import org.asteriskjava.manager.event.HangupEvent;
+import org.asteriskjava.manager.event.ManagerEvent;
+import org.asteriskjava.manager.event.NewCallerIdEvent;
+import org.asteriskjava.manager.event.NewChannelEvent;
+import org.asteriskjava.manager.event.NewExtenEvent;
+import org.asteriskjava.manager.event.NewStateEvent;
+import org.asteriskjava.manager.event.ParkedCallEvent;
+import org.asteriskjava.manager.event.ParkedCallGiveUpEvent;
+import org.asteriskjava.manager.event.ParkedCallTimeOutEvent;
+import org.asteriskjava.manager.event.RenameEvent;
+import org.asteriskjava.manager.event.StatusEvent;
+import org.asteriskjava.manager.event.UnparkedCallEvent;
+import org.asteriskjava.manager.event.VarSetEvent;
 import org.asteriskjava.util.DateUtil;
-import org.asteriskjava.util.Log;
-import org.asteriskjava.util.LogFactory;
-
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages channel events on behalf of an AsteriskServer.
@@ -34,7 +63,7 @@ import java.util.*;
  */
 class ChannelManager
 {
-    private final Log logger = LogFactory.getLog(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     /**
      * How long we wait before we remove hung up channels from memory (in milliseconds).
@@ -118,6 +147,7 @@ class ChannelManager
         synchronized (channels)
         {
             channels.add(channel);
+            channels.notifyAll();
         }
     }
 
@@ -144,6 +174,7 @@ class ChannelManager
                     }
                 }
             }
+            channels.notifyAll();
         }
     }
 
@@ -363,6 +394,38 @@ class ChannelManager
             }
         }
         return null;
+    }
+
+    /**
+     * Awaits for a channel with a given id to become available if not already
+     * available.
+     * @param id the channel id, passed to {@link #getChannelImplById(String)}
+     * @param timeout the timeout in milliseconds
+     * @return an instance or null, if timed out
+     * @throws InterruptedException if the thread was interrupted while waiting
+     */
+    AsteriskChannelImpl awaitChannelImplById(String id, long timeout) throws InterruptedException
+    {
+        final long started = System.currentTimeMillis();
+        final long deadline = System.currentTimeMillis() + timeout;
+        synchronized (channels)
+        {
+            AsteriskChannelImpl impl;
+
+            while ((impl = getChannelImplById(id)) == null)
+            {
+                final long wait = deadline - System.currentTimeMillis();
+                if (wait < 0) {
+                    break;
+                }
+                logger.trace("Starting to await for channel [{}] for {}ms", id, wait);
+                channels.wait(wait);
+            }
+
+            logger.trace("Channel {} found in {}ms", impl == null ? "was not" : impl.getId(), 
+                    System.currentTimeMillis() - started);
+            return impl;
+        }
     }
 
     /**
