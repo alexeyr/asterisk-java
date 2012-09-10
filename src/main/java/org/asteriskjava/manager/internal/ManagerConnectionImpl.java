@@ -983,39 +983,33 @@ public class ManagerConnectionImpl implements ManagerConnection, Dispatcher
         {
             writer.sendAction(action, internalActionId);
             // only wait if response has not yet arrived.
-            if ((responseEvents.getResponse() == null || !responseEvents.isComplete()))
+            final long waitingStarted = System.currentTimeMillis();
+            while (!responseEvents.isComplete() && System.currentTimeMillis() - waitingStarted < timeout)
             {
                 try
                 {
-                    responseEvents.wait(timeout);
+                    responseEvents.wait(timeout - (System.currentTimeMillis() - waitingStarted));
                 }
                 catch (InterruptedException e)
                 {
                     logger.warn("Interrupted while waiting for response events.");
                     Thread.currentThread().interrupt();
+                    break;
                 }
             }
+        }
+
+        // clean up
+        synchronized (this.responseEventListeners)
+        {
+            this.responseEventListeners.remove(internalActionId);
         }
 
         // still no response or not all events received and timed out?
         if ((responseEvents.getResponse() == null || !responseEvents.isComplete()))
         {
-            // clean up
-            synchronized (this.responseEventListeners)
-            {
-                this.responseEventListeners.remove(internalActionId);
-            }
-
             throw new EventTimeoutException("Timeout waiting for response or response events to " + action.getAction()
                     + (action.getActionId() == null ? "" : " (actionId: " + action.getActionId() + ")"), responseEvents);
-        }
-
-        // remove the event handler
-        // Note: The response handler has already been removed
-        // when the response was received
-        synchronized (this.responseEventListeners)
-        {
-            this.responseEventListeners.remove(internalActionId);
         }
 
         return responseEvents;
