@@ -190,7 +190,7 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener
         {
             try
             {
-                eventConnection.login();
+                eventConnection.login("On");
             }
             catch (Exception e)
             {
