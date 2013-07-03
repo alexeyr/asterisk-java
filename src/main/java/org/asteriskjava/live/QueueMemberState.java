@@ -64,7 +64,13 @@ public enum QueueMemberState
     /**
      * Device is not availible for call, eg. Agent is logged off.
      */
-    DEVICE_UNAVAILABLE(QueueMemberEvent.AST_DEVICE_UNAVAILABLE);
+    DEVICE_UNAVAILABLE(QueueMemberEvent.AST_DEVICE_UNAVAILABLE),
+    
+    DEVICE_RINGING(QueueMemberEvent.AST_DEVICE_RINGING),
+    
+    DEVICE_RINGINUSE(QueueMemberEvent.AST_DEVICE_RINGINUSE),
+    
+    DEVICE_ONHOLD(QueueMemberEvent.AST_DEVICE_ONHOLD);
 
     private final int status;
 
