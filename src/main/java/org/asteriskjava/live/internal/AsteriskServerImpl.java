@@ -310,16 +310,14 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener 
 	}
 
 	public void originateToExtensionAsync(String channel, String context,
-			String exten, int priority, long timeout, OriginateCallback cb)
-			throws ManagerCommunicationException {
+			String exten, int priority, long timeout, OriginateCallback cb) {
 		originateToExtensionAsync(channel, context, exten, priority, timeout,
 				null, null, cb);
 	}
 
 	public void originateToExtensionAsync(String channel, String context,
 			String exten, int priority, long timeout, CallerId callerId,
-			Map<String, String> variables, OriginateCallback cb)
-			throws ManagerCommunicationException {
+			Map<String, String> variables, OriginateCallback cb) {
 		final OriginateAction originateAction;
 
 		originateAction = new OriginateAction();
@@ -337,16 +335,14 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener 
 	}
 
 	public void originateToApplicationAsync(String channel, String application,
-			String data, long timeout, OriginateCallback cb)
-			throws ManagerCommunicationException {
+			String data, long timeout, OriginateCallback cb) {
 		originateToApplicationAsync(channel, application, data, timeout, null,
 				null, cb);
 	}
 
 	public void originateToApplicationAsync(String channel, String application,
 			String data, long timeout, CallerId callerId,
-			Map<String, String> variables, OriginateCallback cb)
-			throws ManagerCommunicationException {
+			Map<String, String> variables, OriginateCallback cb) {
 		final OriginateAction originateAction;
 
 		originateAction = new OriginateAction();
@@ -363,7 +359,7 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener 
 	}
 
 	public void originateAsync(OriginateAction originateAction,
-			OriginateCallback cb) throws ManagerCommunicationException {
+			OriginateCallback cb) {
 		final Map<String, String> variables;
 		final String traceId;
 
@@ -396,8 +392,15 @@ public class AsteriskServerImpl implements AsteriskServer, ManagerEventListener 
 		}
 
 		initializeIfNeeded();
-		ManagerResponse response = sendActionOnEventConnection(originateAction);
-		if (response instanceof ManagerError) {
+		ManagerResponse response = null;
+		try {
+			response = sendActionOnEventConnection(originateAction);
+		} catch (LiveException cause) {
+			if (cb != null) {
+				cb.onFailure(cause);
+			}
+		}
+		if (response != null && response instanceof ManagerError) {
 			if (cb != null) {
 				synchronized (originateCallbacks) {
 					originateCallbacks.remove(traceId);

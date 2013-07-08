@@ -67,10 +67,8 @@ public interface AsteriskServer
      * Asynchronously generates an outgoing channel.
      * @param originateAction the action that contains parameters for the originate
      * @param cb callback to inform about the result
-     * @throws ManagerCommunicationException if the originate action cannot be
-     *         sent to Asterisk
      */
-    public void originateAsync(OriginateAction originateAction, OriginateCallback cb) throws ManagerCommunicationException;
+    public void originateAsync(OriginateAction originateAction, OriginateCallback cb);
     
     /**
      * Generates an outgoing channel to a dialplan entry (extension, context,
@@ -178,12 +176,9 @@ public interface AsteriskServer
      * @param timeout how long to wait for the channel to be answered before its
      *        considered to have failed (in ms)
      * @param callback callback to inform about the result
-     * @throws ManagerCommunicationException if the originate action cannot be
-     *         sent to Asterisk
      */
     void originateToExtensionAsync(String channel, String context,
-	    String exten, int priority, long timeout, OriginateCallback callback)
-	    throws ManagerCommunicationException;
+	    String exten, int priority, long timeout, OriginateCallback callback);
 
     /**
      * Asynchronously generates an outgoing channel to a dialplan entry
@@ -200,13 +195,10 @@ public interface AsteriskServer
      *        <code>null</code>.
      * @param variables channel variables to set, may be <code>null</code>.
      * @param callback callback to inform about the result
-     * @throws ManagerCommunicationException if the originate action cannot be
-     *         sent to Asterisk
      */
     void originateToExtensionAsync(String channel, String context,
 	    String exten, int priority, long timeout, CallerId callerId,
-	    Map<String, String> variables, OriginateCallback callback)
-	    throws ManagerCommunicationException;
+	    Map<String, String> variables, OriginateCallback callback);
 
     /**
      * Asynchronously generates an outgoing channel to an application.
@@ -218,12 +210,9 @@ public interface AsteriskServer
      * @param timeout how long to wait for the channel to be answered before its
      *        considered to have failed (in ms)
      * @param callback callback to inform about the result
-     * @throws ManagerCommunicationException if the originate action cannot be
-     *         sent to Asterisk
      */
     void originateToApplicationAsync(String channel, String application,
-	    String data, long timeout, OriginateCallback callback)
-	    throws ManagerCommunicationException;
+	    String data, long timeout, OriginateCallback callback);
 
     /**
      * Asynchronously generates an outgoing channel to an application and sets
@@ -239,13 +228,10 @@ public interface AsteriskServer
      *        <code>null</code>.
      * @param variables channel variables to set, may be <code>null</code>.
      * @param callback callback to inform about the result
-     * @throws ManagerCommunicationException if the originate action cannot be
-     *         sent to Asterisk
      */
     void originateToApplicationAsync(String channel, String application,
 	    String data, long timeout, CallerId callerId,
-	    Map<String, String> variables, OriginateCallback callback)
-	    throws ManagerCommunicationException;
+	    Map<String, String> variables, OriginateCallback callback);
 
     /**
      * Returns the active channels of the Asterisk server.
